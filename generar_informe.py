@@ -65,20 +65,59 @@ def run_report_generation():
     
     # <<<--- FUNCIÓN DE CLASIFICACIÓN (sin cambios) ---<<<
     def classify_topic(comment):
+
         comment_lower = str(comment).lower()
-        if re.search(r'\bprecio\b|\bcu[aá]nto vale\b|d[oó]nde|c[oó]mo consigo|duda|pregunta|comprar|tiendas|disponible|sirve para|c[oó]mo se toma|tiene az[uú]car|valor', comment_lower):
+
+        # Precio y Valoración Económica
+
+        if re.search(r'\bcar[oó]|\bprecio\b|\bval[eé]|\bcosto\b|\bcu[aá]nto vale|\b4200\b|\b100 pesos?\b|costoso|estafa|injusto|lujo', comment_lower):
+
+            return 'Precio y Valoración Económica'
+
+    # Cambios en Calidad/Producto
+
+        if re.search(r'espeso|agu[ao]|tra[ei]a? m[aá]s|trae menos|contenido|hojuelas|mitad|vac[ií]o|disminuy[oó]|calidad|cantidad|cambia[rd]o|ahora|antes|antigua', comment_lower):
+
+            return 'Cambios en Calidad/Producto'
+
+    # Experiencia y Nostalgia
+
+         if re.search(r'recuerdo|infancia|niñez|niñ[oa]|hace [0-9]+|1988|35 años|marcando|cuando era|bob yurt|morenitas|navidad|tajalapiz', comment_lower):
+
+            return 'Experiencia y Nostalgia'
+
+    # Sabor y Características
+
+        if re.search(r'sabor|rico|delicioso|maluco|pesimo|remedio|diabetes|az[uú]car|dulce|espesito|sabe a', comment_lower):
+
+            return 'Sabor y Características'
+
+    # Campaña Publicitaria
+
+        if re.search(r'kevin johansen|eduardo niño|chocapic|diseño|publicidad|promoci[oó]n|inteligencia artificial|ai\b|bon yurt morenitas', comment_lower):
+
+            return 'Campaña Publicitaria'
+
+    # Preguntas sobre el Producto
+
+        if re.search(r'\bdónde comprar|\bcomprar\b|disponible|tiendas|consigo|promoción|pregunta|duda|\bcomo se|\bpara qué', comment_lower):
+
             return 'Preguntas sobre el Producto'
-        if re.search(r'b[úu]lgaros|n[oó]dulos|en casa|casero|artesanal|preparo yo|vendo el cultivo|hecho por mi', comment_lower):
-            return 'Comparación con Kéfir Casero/Artesanal'
-        if re.search(r'aditivos|almid[oó]n|preservantes|lactosa|microbiota|flora intestinal|saludable|bacterias|vivas|gastritis|colon|helicobacter|az[uú]car añadid[oa]s', comment_lower):
-            return 'Ingredientes y Salud'
-        if re.search(r'pasco|\b[eé]xito\b|\bara\b|ol[ií]mpica|d1|copia de|no lo venden|no llega|no lo encuentro|no hay en', comment_lower):
-            return 'Competencia y Disponibilidad'
-        if re.search(r'rico|bueno|excelente|gusta|mejor|delicioso|espectacular|encanta|s[úu]per|feo|horrible|mal[ií]simo|sabe a', comment_lower):
-            return 'Opinión General del Producto'
-        if re.search(r'am[eé]n|jajaja|receta|gracias|bendiciones', comment_lower) or len(comment_lower.split()) < 3:
+
+    # Comentarios Negativos Extremos
+
+        if re.search(r'\b(mierda|basura|estafa|car[oó] y mal[ou])\b', comment_lower):
+
+            return 'Comentarios Negativos Extremos'
+
+    # Fuera de Tema
+
+        if re.search(r'am[eé]n|jajaja|bendiciones|^\W*$', comment_lower) or len(comment_lower.split()) < 3:
+
             return 'Fuera de Tema / No Relevante'
+
         return 'Otros'
+ 
     
     df_comments['tema'] = df_comments['comment_text'].apply(classify_topic)
     print("Análisis completado.")
@@ -377,3 +416,4 @@ def run_report_generation():
 
 if __name__ == "__main__":
     run_report_generation()
+
