@@ -5,32 +5,34 @@ on:
   schedule:
     - cron: '0 12 * * *'
 
+# AÑADIDO: Permisos para Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    permissions:      # <--- AÑADIR ESTA SECCIÓN
-      contents: write # <--- PARA PERMITIR QUE EL ROBOT HAGA 'GIT PUSH'
-
     steps:
       - name: 1. Descargar el código del repositorio
         uses: actions/checkout@v4
-
+        
       - name: 2. Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
+          
       - name: 3. Instalar las librerías necesarias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
+          
       - name: 4. Ejecutar el script principal para generar los archivos
         env:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
         run: python main.py
-
+        
       - name: 5. Subir los archivos actualizados al repositorio
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -38,3 +40,28 @@ jobs:
           git add .
           git diff-index --quiet HEAD || git commit -m "📊 Actualización automática del dashboard"
           git push
+
+  # NUEVO JOB: Deploy a GitHub Pages
+  deploy:
+    needs: build-and-deploy  # Espera a que termine el job anterior
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main  # Asegura que tome la última versión
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
