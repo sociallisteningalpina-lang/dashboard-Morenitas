@@ -176,8 +176,13 @@ def run_report_generation():
             <div class="card charts-section">
                 <h2 class="section-title">Análisis General</h2>
                 <div class="charts-grid">
-                    <div class="chart-container"><canvas id="postCountChart"></canvas></div><div class="chart-container"><canvas id="sentimentChart"></canvas></div><div class="chart-container"><canvas id="topicsChart"></canvas></div>
-                    <div class="chart-container full-width"><canvas id="sentimentByTopicChart"></canvas></div><div class="chart-container full-width"><canvas id="dailyChart"></canvas></div><div class="chart-container full-width"><canvas id="hourlyChart"></canvas></div>
+                    <div class="chart-container"><canvas id="postCountChart"></canvas></div>
+                    <div class="chart-container"><canvas id="sentimentChart"></canvas></div>
+                    <div class="chart-container"><canvas id="topicsPieChart"></canvas></div>
+                    <div class="chart-container"><canvas id="topicsChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="sentimentByTopicChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="dailyChart"></canvas></div>
+                    <div class="chart-container full-width"><canvas id="hourlyChart"></canvas></div>
                 </div>
             </div>
             
@@ -212,6 +217,45 @@ def run_report_generation():
                 Object.assign(charts, {{
                     postCount: new Chart(document.getElementById('postCountChart'), {{ type: 'doughnut', options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ title: {{ display: true, text: 'Distribución de Pautas por Red Social' }} }} }} }}),
                     sentiment: new Chart(document.getElementById('sentimentChart'), {{ type: 'doughnut', options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ title: {{ display: true, text: 'Distribución de Sentimientos' }} }} }} }}),
+                    topicsPie: new Chart(document.getElementById('topicsPieChart'), {{ 
+                        type: 'pie', 
+                        options: {{ 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: {{ 
+                                title: {{ display: true, text: 'Distribución de Temas (%)' }},
+                                legend: {{ 
+                                    position: 'right',
+                                    labels: {{ 
+                                        boxWidth: 15,
+                                        padding: 10,
+                                        font: {{ size: 11 }}
+                                    }}
+                                }},
+                                tooltip: {{
+                                    callbacks: {{
+                                        label: function(context) {{
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return label + ': ' + value + ' (' + percentage + '%)';
+                                        }}
+                                    }}
+                                }},
+                                datalabels: {{
+                                    display: true,
+                                    color: 'white',
+                                    font: {{ weight: 'bold', size: 12 }},
+                                    formatter: (value, context) => {{
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return percentage + '%';
+                                    }}
+                                }}
+                            }}
+                        }} 
+                    }}),
                     topics: new Chart(document.getElementById('topicsChart'), {{ type: 'bar', options: {{ responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: {{ legend: {{ display: false }}, title: {{ display: true, text: 'Temas Principales' }} }} }} }}),
                     sentimentByTopic: new Chart(document.getElementById('sentimentByTopicChart'), {{ type: 'bar', options: {{ responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: {{ x: {{ stacked: true }}, y: {{ stacked: true }} }}, plugins: {{ title: {{ display: true, text: 'Sentimiento por Tema' }} }} }} }}),
                     daily: new Chart(document.getElementById('dailyChart'), {{ type: 'bar', options: {{ responsive: true, maintainAspectRatio: false, scales: {{ x: {{ stacked: true }}, y: {{ stacked: true }} }}, plugins: {{ title: {{ display: true, text: 'Volumen de Comentarios por Día' }} }} }} }}),
@@ -231,8 +275,7 @@ def run_report_generation():
                     // Filtrar pautas por plataforma
                     let postsToShow = (selectedPlatform === 'Todas') ? allPostsData : allPostsData.filter(p => p.platform === selectedPlatform);
                     
-                    // NUEVO: Filtrar pautas por tema
-                    // Solo mostrar pautas que tienen comentarios del tema seleccionado
+                    // Filtrar pautas por tema
                     if (selectedTopic !== 'Todos') {{
                         const urlsWithTopic = new Set(
                             allData.filter(d => d.topic === selectedTopic).map(d => d.post_url)
@@ -309,7 +352,7 @@ def run_report_generation():
                         postsToShow = allPostsData.filter(p => p.platform === selectedPlatform);
                     }}
 
-                    // NUEVO: Filtrar por tema
+                    // Filtrar por tema
                     if (selectedTopic !== 'Todos') {{
                         filteredData = filteredData.filter(d => d.topic === selectedTopic);
                     }}
@@ -416,8 +459,25 @@ def run_report_generation():
                     charts.sentiment.data.datasets = [{{ data: [sentimentCounts['Positivo']||0, sentimentCounts['Negativo']||0, sentimentCounts['Neutro']||0], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }}]; 
                     charts.sentiment.update(); 
                     
+                    // NUEVO: Actualizar pie chart de temas
                     const topicCounts = filteredData.reduce((acc, curr) => {{ acc[curr.topic] = (acc[curr.topic] || 0) + 1; return acc; }}, {{}}); 
                     const sortedTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]); 
+                    
+                    // Colores para el pie chart (paleta variada)
+                    const topicColors = [
+                        '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
+                        '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b',
+                        '#27ae60', '#2980b9', '#8e44ad', '#d35400', '#2c3e50'
+                    ];
+                    
+                    charts.topicsPie.data.labels = sortedTopics.map(d => d[0]); 
+                    charts.topicsPie.data.datasets = [{{ 
+                        data: sortedTopics.map(d => d[1]), 
+                        backgroundColor: topicColors.slice(0, sortedTopics.length)
+                    }}]; 
+                    charts.topicsPie.update();
+                    
+                    // Gráfico de barras de temas (existente)
                     charts.topics.data.labels = sortedTopics.map(d => d[0]); 
                     charts.topics.data.datasets = [{{ label: 'Comentarios', data: sortedTopics.map(d => d[1]), backgroundColor: '#3498db' }}]; 
                     charts.topics.update(); 
@@ -490,5 +550,3 @@ def run_report_generation():
 
 if __name__ == "__main__":
     run_report_generation()
-
-
