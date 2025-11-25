@@ -60,31 +60,51 @@ def run_report_generation():
     
     def classify_topic(comment): 
         comment_lower = str(comment).lower()
-
-        if re.search(r'\bcar[oó]|\bprecio\b|\bval[eé]|\bcosto\b|\bcu[aá]nto vale|\b4200\b|\b100 pesos?\b|costoso|estafa|injusto|lujo', comment_lower):
+    
+        # Salud y Preocupaciones Nutricionales
+        if re.search(r'diabetes|diabético|az[uú]car|enfermedad|cáncer|saludable|ultraprocesado|contaminar|sistema digestivo|pésimo producto', comment_lower):
+            return 'Salud y Preocupaciones Nutricionales'
+    
+    # Precio y Valoración Económica
+        if re.search(r'\bcar[oó]|\bprecio\b|\bval[eé]|\bcosto\b|\bcu[aá]nto vale|\b4200\b|\b5 lucas\b|\b100 pesos?|\b300 pesos\b|costoso|estafa|injusto|lujo|inflado|sobrevalorad|inaccesible|abusador|robando|enriquecido', comment_lower):
             return 'Precio y Valoración Económica'
-
-        if re.search(r'espeso|agu[ao]|tra[ei]a? m[aá]s|trae menos|contenido|hojuelas|mitad|vac[ií]o|disminuy[oó]|calidad|cantidad|cambia[rd]o|ahora|antes|antigua', comment_lower):
+    
+    # Cambios en Calidad/Producto/Cantidad
+        if re.search(r'espeso|espes[ií]to|agu[ao]|tra[ei]a? m[aá]s|trae menos|contenido|hojuelas|mitad|vac[ií]o|disminuy[oó]|calidad|cantidad|cambia[rd]o|ahora|antes|antigua|mejorar la f[oó]rmula|derivados|suero|bebida l[aá]ctea|no es yogurt|undieron el fondo', comment_lower):
             return 'Cambios en Calidad/Producto'
-
-        if re.search(r'recuerdo|infancia|niñez|niñ[oa]|hace [0-9]+|1988|35 años|marcando|cuando era|bob yurt|morenitas|navidad|tajalapiz', comment_lower):
+    
+    # Experiencia y Nostalgia
+        if re.search(r'recuerdo|infancia|niñez|niñ[oa]|hace [0-9]+|1988|35 años|marcando|cuando era|bob yurt|tajalapiz|de grande|ya de adulta|fin[ae]les del 88|como pasa el tiempo', comment_lower):
             return 'Experiencia y Nostalgia'
-
-        if re.search(r'sabor|rico|delicioso|maluco|pesimo|remedio|diabetes|az[uú]car|dulce|espesito|sabe a', comment_lower):
+    
+    # Sabor y Características del Producto
+        if re.search(r'\bsabor\b|rico|delicioso|maluco|p[eé]simo|remedio|dulce|favorito|bien\s*$|tan bueno|nunca cambia|simplemente delicioso', comment_lower):
             return 'Sabor y Características'
-
-        if re.search(r'kevin johansen|eduardo niño|chocapic|diseño|publicidad|promoci[oó]n|inteligencia artificial|ai\b|bon yurt morenitas', comment_lower):
+    
+    # Campaña Publicitaria y Comunicación
+        if re.search(r'kevin johansen|eduardo niño|chocapic|peso pluma|vaselino|diseño|publicidad|propaganda|promoci[oó]n|inteligencia artificial|\bai\b|marketing|bon yurt morenitas|buenos d[ií]as|franc[eé]s|sabe usted qu[eé]|primera palabra', comment_lower):
             return 'Campaña Publicitaria'
-
-        if re.search(r'\bdónde comprar|\bcomprar\b|disponible|tiendas|consigo|promoción|pregunta|duda|\bcomo se|\bpara qué', comment_lower):
+    
+    # Comentarios Positivos/Aprobación
+        if re.search(r'perfecto|excelente|mejores l[aá]cteos|bravo|vale la pena|\b❤️?\b', comment_lower):
+            return 'Comentarios Positivos'
+    
+    # Comparaciones y Alternativas
+        if re.search(r'en casa|me sale m[aá]s barato|aguapanelita|hago en casa|f[aá]cilmente', comment_lower):
+          return 'Comparaciones y Alternativas'
+    
+    # Preguntas sobre el Producto
+        if re.search(r'\bd[oó]nde comprar|\bcomprar\b|disponible|tiendas|consigo|pregunta|duda|\bcomo se|\bpara qu[eé]|\bqu[eé] es\b|sirve|sabe usted', comment_lower):
             return 'Preguntas sobre el Producto'
-
-        if re.search(r'\b(mierda|basura|estafa|car[oó] y mal[ou])\b', comment_lower):
+    
+    # Comentarios Negativos Generales
+        if re.search(r'\bmierda\b|\bbasura\b|verg[üu]enza|gonorrea|joda|rem[aá]lp[aá]rido', comment_lower):
             return 'Comentarios Negativos'
-
-        if re.search(r'am[eé]n|jajaja|bendiciones|^\W*$', comment_lower) or len(comment_lower.split()) < 3:
+    
+    # Fuera de Tema / No Relevante
+        if re.search(r'am[eé]n|jajaja|bendiciones|^\W*$|^[0-9]+$|^es verdad$|^mucho m[aá]s$', comment_lower) or len(comment_lower.split()) < 3:
             return 'Fuera de Tema / No Relevante'
-
+    
         return 'Otros'
 
     df_comments['tema'] = df_comments['comment_text'].apply(classify_topic)
@@ -550,3 +570,4 @@ def run_report_generation():
 
 if __name__ == "__main__":
     run_report_generation()
+
